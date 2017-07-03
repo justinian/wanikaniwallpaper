@@ -1,11 +1,17 @@
+IMAGE_NAME := justinian/wk-image-updater
 
-SRC_FILES=$(wildcard *.cpp)
-OBJ_FILES=$(patsubst %.cpp,%.o, ${SRC_FILES}) 
-HEADER_FILES=$(wildcard *.hpp)
-LIBS=-lcurl -ljsoncpp -lpng -lfreetype -lboost_program_options
+SRCS := $(wildcard src/*.cpp)
+OBJS := $(SRCS:.cpp=.o) 
 
-wanikaniwallpaper: ${OBJ_FILES}
-	g++  ${OBJ_FILES} ${LIBS} -o wanikaniwallpaper
+LDFLAGS := -lcurl -ljsoncpp -lpng -lfreetype -lboost_program_options
+CXXFLAGS := -MD -MP -I/usr/include/freetype2
 
-%.o: %.cpp ${HEADER_FILES}
-	g++ -I/usr/include/freetype2 -o $@ $< -c
+wanikaniwallpaper: ${OBJS}
+	g++ ${OBJS} ${LDFLAGS} -o $@
+
+-include $(OBJS:.o=.d)
+
+src/%.o: src/%.cpp
+
+docker_image: Dockerfile wanikaniwallpaper
+	docker build --rm -t ${IMAGE_NAME} .
